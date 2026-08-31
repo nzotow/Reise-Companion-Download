@@ -27,8 +27,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view thailand-v14 >/dev/null 2>&1; then
-            gh release upload thailand-v14 Thailand-Khao-Lak-2026-Magazin-v14.reise --clobber
+          REPO='nzotow/Reise-Companion-Download'
+          if gh release view thailand-v14 --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload thailand-v14 Thailand-Khao-Lak-2026-Magazin-v14.reise --clobber --repo "$REPO"
           else
-            gh release create thailand-v14 Thailand-Khao-Lak-2026-Magazin-v14.reise --title 'Thailand Khao Lak 2026 – V14' --notes 'Reisepaket für den Reise-Companion.'
+            gh release create thailand-v14 Thailand-Khao-Lak-2026-Magazin-v14.reise --repo "$REPO" --title 'Thailand Khao Lak 2026 – V14' --notes 'Reisepaket für den Reise-Companion.'
           fi
