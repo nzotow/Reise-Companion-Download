@@ -1,0 +1,30 @@
+name: Publish Companion APK
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download built Companion artifact
+        run: |
+          curl -L --fail --retry 3 'https://sdmntprnortheu.oaiusercontent.com/files/00000000-9ab4-81f4-8390-c4c6f5abd896/raw?se=2026-08-31T20%3A13%3A50Z&sp=r&sv=2026-02-06&sr=b&scid=070ac6cc-d23a-5b15-a302-f3cde48e13ec&skoid=c30e7ce7-1f51-4051-a377-288cdba21c02&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-31T06%3A07%3A29Z&ske=2026-09-01T06%3A07%3A29Z&sks=b&skv=2026-02-06&sig=ce/FeziRW7yZqSPyMEcfWIFkJ91DMOUL%2B7gwGsr73ho%3D' -o companion.zip
+          unzip -o companion.zip
+          test -f Reise-Companion-0.6.0.apk
+
+      - name: Publish public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v0.6.0 >/dev/null 2>&1 || gh release create v0.6.0 --title 'Reise-Companion 0.6.0' --notes 'Öffentliche Testversion des Reise-Companion. Enthält keinen Quellcode.'
+          gh release upload v0.6.0 Reise-Companion-0.6.0.apk --clobber
