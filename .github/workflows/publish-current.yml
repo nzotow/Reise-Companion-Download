@@ -1,0 +1,39 @@
+name: Publish current Companion and Thailand package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-current.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified build artifact
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 'https://sdmntprnortheu.oaiusercontent.com/files/00000000-ea98-81f4-9fda-ff36bcf3fd2e/raw?se=2026-09-02T00%3A20%3A47Z&sp=r&sv=2026-02-06&sr=b&scid=01a05f78-4fec-7d5a-bac9-e72f547402e9&skoid=c30e7ce7-1f51-4051-a377-288cdba21c02&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-01T23%3A33%3A43Z&ske=2026-09-02T23%3A33%3A43Z&sks=b&skv=2026-02-06&sig=4E/7qiVMdGlkPdGfHJreDVueE0tXC3sG5%2B8taLzwNxY%3D' -o artifact.zip
+          unzip -o artifact.zip
+          test -f Reise-Companion-0.7.2-Beta.apk
+          test -f Thailand-Khao-Lak-2026-Magazin-v18.reise
+          test "$(stat -c%s Reise-Companion-0.7.2-Beta.apk)" -gt 10000000
+          test "$(stat -c%s Thailand-Khao-Lak-2026-Magazin-v18.reise)" -gt 10000000
+
+      - name: Publish public current release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO='nzotow/Reise-Companion-Download'
+          NOTES='Aktueller gemeinsamer Teststand: Reise-Companion 0.7.2 Beta und Thailand · Khao Lak 2026 – Magazin V18. Zuerst die APK installieren, anschließend die .reise-Datei herunterladen und im Companion importieren.'
+          if gh release view current --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload current Reise-Companion-0.7.2-Beta.apk Thailand-Khao-Lak-2026-Magazin-v18.reise --clobber --repo "$REPO"
+            gh release edit current --repo "$REPO" --title 'Reise-Companion 0.7.2 + Thailand V18' --notes "$NOTES"
+          else
+            gh release create current Reise-Companion-0.7.2-Beta.apk Thailand-Khao-Lak-2026-Magazin-v18.reise --repo "$REPO" --title 'Reise-Companion 0.7.2 + Thailand V18' --notes "$NOTES"
+          fi
